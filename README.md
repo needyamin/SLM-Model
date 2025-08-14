@@ -1,11 +1,6 @@
-# slm-laravel-sql
-
-Minimal from-scratch decoder-only Transformer training repo aimed at Laravel + SQL domain knowledge.
-
-
 # Laravel + SQL Small Language Model (SLM)
 
-A custom small-scale language model built **from scratch** for answering questions about Laravel, PHP, and SQL (PostgreSQL, SQLite).  
+Minimal from-scratch decoder-only Transformer training repo aimed at Laravel + SQL domain knowledge. 
 This model is designed to run on a single GPU and can be trained with your own curated dataset.
 
 ---
