@@ -1,0 +1,5 @@
+torch>=2.0
+sentencepiece>=0.1.98
+numpy
+tqdm
+pytest

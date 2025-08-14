@@ -1,0 +1,25 @@
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  vocab_size: 32000
+  seq_len: 1024
+model:
+  n_layers: 12
+  d_model: 512
+  n_heads: 8
+  d_ff: 2048
+training:
+  epochs: 3
+  micro_batch: 4
+  grad_accum_steps: 8
+  lr: 2e-4
+  weight_decay: 0.1
+  warmup_steps: 500
+  total_steps: 10000
+  save_every: 1000
+  device: "cuda"
+  mixed_precision: true
+io:
+  out_dir: "out"
+  checkpoint_prefix: "ckpt"
+  tokenizer_model: "out/tokenizer.model"
