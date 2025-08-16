@@ -72,7 +72,7 @@ seaborn>=0.11.0       # Statistical visualization
 ### **1. Clone the Repository**
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/needyamin/SLM-Model
 cd SLM-Model
 ```
 
