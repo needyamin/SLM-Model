@@ -12,7 +12,6 @@ class CausalSelfAttention(nn.Module):
         self.dk = d_model // n_heads
         self.qkv = nn.Linear(d_model, 3 * d_model)
         self.out = nn.Linear(d_model, d_model)
-        self.register_buffer("mask", None, persistent=False)
 
     def forward(self, x):
         B, T, C = x.size()
@@ -20,12 +19,12 @@ class CausalSelfAttention(nn.Module):
         q, k, v = qkv[0], qkv[1], qkv[2]  # each (B, nh, T, dk)
         # scaled dot-product
         att = torch.einsum("bhtd,bhsd->bhts", q, k) / math.sqrt(self.dk)  # (B, nh, T, T)
-        if self.mask is None or self.mask.size(2) < T:
-            # build causal mask
-            device = x.device
-            mask = torch.tril(torch.ones((T, T), device=device)).unsqueeze(0).unsqueeze(0)  # 1,1,T,T
-            self.mask = mask
-        att = att.masked_fill(self.mask[:,:,:T,:T] == 0, float("-inf"))
+        
+        # build causal mask for this sequence length
+        device = x.device
+        mask = torch.tril(torch.ones((T, T), device=device)).unsqueeze(0).unsqueeze(0)  # 1,1,T,T
+        att = att.masked_fill(mask == 0, float("-inf"))
+        
         w = F.softmax(att, dim=-1)
         y = torch.einsum("bhts,bhsd->bhtd", w, v)  # B, nh, T, dk
         y = y.permute(0,2,1,3).contiguous().view(B, T, C)
@@ -78,11 +77,12 @@ class DecoderOnlyTransformer(nn.Module):
 
     def forward(self, idx):
         B, T = idx.size()
-        assert T <= self.seq_len, "Sequence length > seq_len"
-        device = idx.device
+        assert T <= self.seq_len, f"Sequence length {T} > seq_len {self.seq_len}"
+        
         tok = self.tok_emb(idx)  # B,T,C
-        pos = self.pos_emb[:, :T, :].to(device)
+        pos = self.pos_emb[:, :T, :]  # Remove device conversion - pos_emb is already on the right device
         x = tok + pos
+        
         for blk in self.blocks:
             x = blk(x)
         x = self.ln_f(x)

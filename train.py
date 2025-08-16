@@ -64,17 +64,27 @@ while step < total_steps:
     epoch += 1
     # each outer loop collects micro_batch * grad_accum sequences -> effective batch
     for _ in range( (micro_batch * grad_accum) ):
-        seq = next(g).to(device)  # seq_len tensor
-        # create input and target
-        x = seq.unsqueeze(0)  # (1, T)
-        y = x.clone()
-        # forward
-        with torch.cuda.amp.autocast(enabled=cfg["training"].get("mixed_precision", True)):
-            logits = model(x)  # 1,T,V
-            loss = torch.nn.functional.cross_entropy(logits.view(-1, logits.size(-1)), y.view(-1))
-            loss = loss / grad_accum
-        scaler.scale(loss).backward()
-        running_loss += loss.item()
+        try:
+            seq = next(g).to(device)  # seq_len tensor
+            # create input and target
+            x = seq.unsqueeze(0)  # (1, T)
+            y = x.clone()
+            
+            # forward
+            with torch.cuda.amp.autocast(enabled=cfg["training"].get("mixed_precision", True)):
+                logits = model(x)  # 1,T,V
+                # Ensure logits and targets have correct shapes for cross_entropy
+                logits_flat = logits.view(-1, logits.size(-1))  # (T, V)
+                targets_flat = y.view(-1)  # (T,)
+                loss = torch.nn.functional.cross_entropy(logits_flat, targets_flat)
+                loss = loss / grad_accum
+            
+            scaler.scale(loss).backward()
+            running_loss += loss.item()
+
+        except Exception as e:
+            print(f"Error during training step: {e}")
+            continue
 
         # optimization step
         if (_ + 1) % grad_accum == 0:

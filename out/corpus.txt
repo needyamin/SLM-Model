@@ -1,0 +1,19 @@
+Instruction: Create a Laravel migration for users table with name and unique email.
+Answer:
+php artisan make:migration create_users_table
+Schema::create('users', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->string('email')->unique();
+    $table->timestamps();
+});
+
+Instruction: Write a PostgreSQL partial index for active users.
+Answer:
+CREATE INDEX idx_users_active_email ON users (email) WHERE active = true;
+
+Instruction: Eloquent: fetch users with posts and eager load comments count.
+Answer:
+$users = User::with(['posts' => function($q) { $q->withCount('comments'); }])->get();
+
+
